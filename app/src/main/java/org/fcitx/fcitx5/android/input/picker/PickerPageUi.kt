@@ -238,9 +238,15 @@ class PickerPageUi(
                             }
 
                             CustomGestureView.GestureType.Up -> {
+                                val consumed = onPopupChangeFocus(view.id, event.x, event.y)
                                 onPopupTrigger(view.id).also {
                                     onPopupAction(PopupAction.DismissAction(view.id))
-                                }
+                                } || consumed
+                            }
+
+                            CustomGestureView.GestureType.Cancel -> {
+                                onPopupAction(PopupAction.DismissAction(view.id))
+                                true
                             }
                         }
                     }

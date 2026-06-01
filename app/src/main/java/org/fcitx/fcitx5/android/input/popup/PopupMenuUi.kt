@@ -27,9 +27,8 @@ class PopupMenuUi(
     theme: Theme,
     outerBounds: Rect,
     triggerBounds: Rect,
-    onDismissSelf: PopupContainerUi.() -> Unit = {},
     private val items: Array<KeyDef.Popup.Menu.Item>
-) : PopupContainerUi(ctx, theme, outerBounds, triggerBounds, onDismissSelf) {
+) : PopupContainerUi(ctx, theme, outerBounds, triggerBounds) {
 
     private val keySize = ctx.dp(48)
 
@@ -94,12 +93,20 @@ class PopupMenuUi(
         }
     }
 
+    override fun onIsInsideVisiblePopupBounds(x: Float, y: Float): Boolean {
+        if (y < 0f || y >= keySize) return false
+        val newColumn = floor(x / keySize).toInt()
+        return newColumn in 0 until columnCount
+    }
+
+    override fun onIsOutOfPopupBounds(x: Float, y: Float): Boolean {
+        val newColumn = floor(x / keySize).toInt()
+        return newColumn < -2 || newColumn > columnCount + 1
+    }
+
     override fun onChangeFocus(x: Float, y: Float): Boolean {
+        if (onIsOutOfPopupBounds(x, y)) return true
         var newColumn = floor(x / keySize).toInt()
-        if (newColumn < -2 || newColumn > columnCount + 1) {
-            onDismissSelf(this)
-            return true
-        }
         newColumn = limitIndex(newColumn, columnCount)
         val newFocus = columnOrder[newColumn]
         if (newFocus < keyViews.size) {

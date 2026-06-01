@@ -25,7 +25,7 @@ open class CustomGestureView(ctx: Context) : FrameLayout(ctx) {
 
     enum class SwipeAxis { X, Y }
 
-    enum class GestureType { Down, Move, Up }
+    enum class GestureType { Down, Move, Up, Cancel }
 
     data class Event(
         val type: GestureType,
@@ -232,7 +232,7 @@ open class CustomGestureView(ctx: Context) : FrameLayout(ctx) {
             }
             MotionEvent.ACTION_CANCEL -> {
                 isPressed = false
-                dispatchGestureEvent(GestureType.Up, event.x, event.y)
+                dispatchGestureEvent(GestureType.Cancel, event.x, event.y)
                 resetState()
                 // reset double tap state on cancel
                 if (doubleTapEnabled) {

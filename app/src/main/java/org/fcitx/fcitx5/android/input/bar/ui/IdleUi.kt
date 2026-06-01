@@ -226,6 +226,7 @@ class IdleUi(
         if (state == State.NumberRow) {
             numberRow.keyActionListener = commonKeyActionListener.listener
             numberRow.popupActionListener = popup.listener
+            numberRow.popupGestureSupport = popup
             if (fromUser && !disableAnimation) {
                 enableSlideTransition(numberRow, idleBody, Gravity.END, Gravity.START)
             }
@@ -239,6 +240,7 @@ class IdleUi(
             numberRow.visibility = View.GONE
             numberRow.keyActionListener = null
             numberRow.popupActionListener = null
+            numberRow.popupGestureSupport = null
             popup.dismissAll()
         }
         currentState = state

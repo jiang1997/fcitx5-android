@@ -30,8 +30,15 @@ import splitties.views.dsl.core.frameLayout
 import splitties.views.dsl.core.lParams
 import java.util.LinkedList
 
+interface PopupGestureSupport {
+    fun hasPopupContainer(viewId: Int): Boolean
+    fun isInsideVisiblePopup(viewId: Int, x: Float, y: Float): Boolean
+    fun isFocusOutOfRange(viewId: Int, x: Float, y: Float): Boolean
+    fun dismissPopupContainerOnly(viewId: Int)
+}
+
 class PopupComponent :
-    UniqueComponent<PopupComponent>(), Dependent, ManagedHandler by managedHandler() {
+    UniqueComponent<PopupComponent>(), Dependent, ManagedHandler by managedHandler(), PopupGestureSupport {
 
     private val service by manager.inputMethodService()
     private val context by manager.context()
@@ -87,12 +94,14 @@ class PopupComponent :
             }
             lastShowTime = System.currentTimeMillis()
             setText(content)
+            root.visibility = View.VISIBLE
             return
         }
         val popup = (freeEntryUi.poll()
             ?: PopupEntryUi(context, theme, popupKeyHeight, popupRadius)).apply {
             lastShowTime = System.currentTimeMillis()
             setText(content)
+            root.visibility = View.VISIBLE
         }
         popup.root.layoutParams = FrameLayout.LayoutParams(popupWidth, popupHeight).apply {
             // align popup bottom with key border bottom [^1]
@@ -133,7 +142,6 @@ class PopupComponent :
             theme,
             rootBounds,
             bounds,
-            { dismissPopup(viewId) },
             popupRadius,
             popupWidth,
             popupKeyHeight,
@@ -154,7 +162,6 @@ class PopupComponent :
             theme,
             rootBounds,
             bounds,
-            { dismissPopup(viewId) },
             menu.items,
         )
         showPopupContainer(viewId, menuUi)
@@ -170,8 +177,30 @@ class PopupComponent :
         showingContainerUi[viewId] = ui
     }
 
+    override fun hasPopupContainer(viewId: Int): Boolean = viewId in showingContainerUi
+
+    override fun isInsideVisiblePopup(viewId: Int, x: Float, y: Float): Boolean {
+        val container = showingContainerUi[viewId] ?: return false
+        return container.isInsideVisiblePopupBounds(x, y)
+    }
+
+    override fun isFocusOutOfRange(viewId: Int, x: Float, y: Float): Boolean {
+        val container = showingContainerUi[viewId] ?: return false
+        return container.isOutOfPopupBounds(x, y)
+    }
+
+    override fun dismissPopupContainerOnly(viewId: Int) {
+        dismissPopupContainer(viewId)
+    }
+
     private fun changeFocus(viewId: Int, x: Float, y: Float): Boolean {
-        return showingContainerUi[viewId]?.changeFocus(x, y) ?: false
+        val container = showingContainerUi[viewId] ?: return false
+        if (container.isOutOfPopupBounds(x, y)) {
+            // Picker and other views without [PopupGestureSession] keep legacy dismiss.
+            dismissPopup(viewId)
+            return true
+        }
+        return container.changeFocus(x, y)
     }
 
     private fun triggerFocused(viewId: Int): KeyAction? {

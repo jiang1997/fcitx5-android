@@ -101,6 +101,7 @@ class KeyboardWindow : InputWindow.SimpleInputWindow<KeyboardWindow>(), Essentia
             keyboardView.removeView(it)
             it.keyActionListener = null
             it.popupActionListener = null
+            it.popupGestureSupport = null
         }
     }
 
@@ -109,6 +110,7 @@ class KeyboardWindow : InputWindow.SimpleInputWindow<KeyboardWindow>(), Essentia
         currentKeyboard?.let {
             it.keyActionListener = keyActionListener
             it.popupActionListener = popupActionListener
+            it.popupGestureSupport = popup
             keyboardView.apply { add(it, lParams(matchParent, matchParent)) }
             it.onAttach()
             it.onReturnDrawableUpdate(returnKeyDrawable.resourceId)
@@ -163,6 +165,7 @@ class KeyboardWindow : InputWindow.SimpleInputWindow<KeyboardWindow>(), Essentia
         currentKeyboard?.let {
             it.keyActionListener = keyActionListener
             it.popupActionListener = popupActionListener
+            it.popupGestureSupport = popup
             it.onAttach()
         }
         notifyBarLayoutChanged()
@@ -173,6 +176,7 @@ class KeyboardWindow : InputWindow.SimpleInputWindow<KeyboardWindow>(), Essentia
             it.onDetach()
             it.keyActionListener = null
             it.popupActionListener = null
+            it.popupGestureSupport = null
         }
         popup.dismissAll()
     }

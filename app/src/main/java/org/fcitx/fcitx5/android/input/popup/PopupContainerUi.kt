@@ -17,7 +17,6 @@ abstract class PopupContainerUi(
     val theme: Theme,
     val outerBounds: Rect,
     val triggerBounds: Rect,
-    val onDismissSelf: PopupContainerUi.() -> Unit
 ) : Ui {
 
     /**
@@ -76,6 +75,25 @@ abstract class PopupContainerUi(
     fun changeFocus(x: Float, y: Float): Boolean {
         return onChangeFocus(x - offsetX, y - offsetY)
     }
+
+    fun isInsideVisiblePopupBounds(x: Float, y: Float): Boolean {
+        return onIsInsideVisiblePopupBounds(x - offsetX, y - offsetY)
+    }
+
+    fun isOutOfPopupBounds(x: Float, y: Float): Boolean {
+        return onIsOutOfPopupBounds(x - offsetX, y - offsetY)
+    }
+
+    /**
+     * Whether the finger is inside the on-screen popup grid (no extra tolerance).
+     */
+    abstract fun onIsInsideVisiblePopupBounds(x: Float, y: Float): Boolean
+
+    /**
+     * Whether the finger is outside the focus tolerance (includes extra rows/columns for
+     * legacy dismiss in picker and similar).
+     */
+    abstract fun onIsOutOfPopupBounds(x: Float, y: Float): Boolean
 
     /**
      * Handle focus change of this [PopupKeyboardUi].

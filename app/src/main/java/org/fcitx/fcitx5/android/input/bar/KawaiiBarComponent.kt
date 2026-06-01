@@ -235,21 +235,25 @@ class KawaiiBarComponent : UniqueViewComponent<KawaiiBarComponent, FrameLayout>(
                     } else abs(angle).coerceIn(90f - 10f, 90f + 10f) * dir
                     v.rotation = angle
                 }
-                CustomGestureView.GestureType.Up -> {
+                CustomGestureView.GestureType.Up, CustomGestureView.GestureType.Cancel -> {
                     val thresholdX = (v as CustomGestureView).swipeThresholdX
                     val thresholdY = v.swipeThresholdY
-                    val handled = when (angle) {
-                        in -45f..45f if distance > thresholdY -> {
-                            service.requestHideSelf(0)
-                            true
+                    val handled = if (e.type == CustomGestureView.GestureType.Up) {
+                        when (angle) {
+                            in -45f..45f if distance > thresholdY -> {
+                                service.requestHideSelf(0)
+                                true
+                            }
+                            !in -45f..45f if distance > thresholdX -> {
+                                v.rotation = 90f * dir
+                                numberRowState = NumberRowState.ForceShow
+                                evalIdleUiState(fromUser = true)
+                                true
+                            }
+                            else -> false
                         }
-                        !in -45f..45f if distance > thresholdX -> {
-                            v.rotation = 90f * dir
-                            numberRowState = NumberRowState.ForceShow
-                            evalIdleUiState(fromUser = true)
-                            true
-                        }
-                        else -> false
+                    } else {
+                        false
                     }
                     v.rotation = 0f
                     return@OnGestureListener handled

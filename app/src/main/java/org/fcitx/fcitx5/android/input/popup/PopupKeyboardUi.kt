@@ -7,6 +7,7 @@ package org.fcitx.fcitx5.android.input.popup
 import android.content.Context
 import android.graphics.Rect
 import android.graphics.drawable.GradientDrawable
+import android.view.View
 import android.view.ViewOutlineProvider
 import org.fcitx.fcitx5.android.data.theme.Theme
 import org.fcitx.fcitx5.android.input.AutoScaleTextView
@@ -33,7 +34,6 @@ import kotlin.math.roundToInt
  * @param outerBounds bound [Rect] of [PopupComponent] root view.
  * @param triggerBounds bound [Rect] of popup trigger view. Used to calculate free space of both sides and
  * determine column order. See [focusColumn] and [columnOrder].
- * @param onDismissSelf callback when popup keyboard wants to close
  * @param radius popup keyboard and key radius
  * @param keyWidth key width in popup keyboard
  * @param keyHeight key height in popup keyboard
@@ -47,14 +47,13 @@ class PopupKeyboardUi(
     theme: Theme,
     outerBounds: Rect,
     triggerBounds: Rect,
-    onDismissSelf: PopupContainerUi.() -> Unit = {},
     private val radius: Float,
     private val keyWidth: Int,
     private val keyHeight: Int,
     private val popupHeight: Int,
     private val keys: Array<String>,
     private val labels: Array<String>
-) : PopupContainerUi(ctx, theme, outerBounds, triggerBounds, onDismissSelf) {
+) : PopupContainerUi(ctx, theme, outerBounds, triggerBounds) {
 
     class PopupKeyUi(override val ctx: Context, val theme: Theme, val text: String) : Ui {
 
@@ -196,16 +195,25 @@ class PopupKeyboardUi(
         }
     }
 
+    override fun onIsInsideVisiblePopupBounds(x: Float, y: Float): Boolean {
+        val width = columnCount * keyWidth
+        val height = rowCount * keyHeight
+        return x >= 0f && x < width.toFloat() &&
+            y >= 0f && y < height.toFloat()
+    }
+
+    override fun onIsOutOfPopupBounds(x: Float, y: Float): Boolean {
+        val newRow = rowCount - (y / keyHeight - 0.2).roundToInt()
+        val newColumn = floor(x / keyWidth).toInt()
+        return newRow < -2 || newRow > rowCount + 1 || newColumn < -2 || newColumn > columnCount + 1
+    }
+
     override fun onChangeFocus(x: Float, y: Float): Boolean {
+        if (onIsOutOfPopupBounds(x, y)) return true
         // move to next row when gesture moves above 30% from bottom of current row
         var newRow = rowCount - (y / keyHeight - 0.2).roundToInt()
         // move to next column when gesture moves out of current column
         var newColumn = floor(x / keyWidth).toInt()
-        // retain focus when gesture moves between ±2 rows/columns of range
-        if (newRow < -2 || newRow > rowCount + 1 || newColumn < -2 || newColumn > columnCount + 1) {
-            onDismissSelf(this)
-            return true
-        }
         newRow = limitIndex(newRow, rowCount)
         newColumn = limitIndex(newColumn, columnCount)
         val newFocus = keyOrders[newRow][newColumn]

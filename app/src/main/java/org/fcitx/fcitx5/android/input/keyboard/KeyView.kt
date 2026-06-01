@@ -116,6 +116,8 @@ abstract class KeyView(ctx: Context, val theme: Theme, val def: KeyDef.Appearanc
         isHapticFeedbackEnabled = false
         if (def.viewId > 0) {
             id = def.viewId
+        } else if (id == NO_ID) {
+            id = generateViewId()
         }
         // key border
         if ((bordered && def.border != Border.Off) || def.border == Border.On) {
